@@ -30,7 +30,10 @@ Keep your regular MPI hard-wiring in place - and it will implement and provide e
 
 ### [Spack](https://spack.io)
 
-*TBD*
+```bash
+spack install mpilander
+spack load mpilander
+```
 
 ### From Source
 
