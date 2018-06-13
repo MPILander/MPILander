@@ -28,8 +28,6 @@ jobs:
       env:
         - CXXFLAGS="-std=c++14" BUILD_TYPE="Debug"
       compiler: clang
-      before_install:
-         - CXX=clang++-5.0 && CC=clang-5.0
       script: &script-cpp-unit
         - mkdir -p $HOME/build
         - cd $HOME/build
