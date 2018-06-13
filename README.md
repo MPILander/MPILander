@@ -18,7 +18,6 @@ Keep your regular MPI hard-wiring in place - and it will implement and provide e
 
 ## Dependencies
 
-Required:
 * CMake 3.9.2+
 * C++11 capable compiler, e.g. g++ 4.8+, clang 3.9+, VS 2015+
 
@@ -34,13 +33,12 @@ Required:
 MPILander can be installed using [CMake](http://cmake.org/):
 
 ```bash
-git clone https://github.com/jeffhammond/MPILander.git
+git clone https://github.com/MPILander/MPILander.git
 
 mkdir -p MPILander-api-build
 cd MPILander-api-build
 
-# for own install prefix append:
-#   -DCMAKE_INSTALL_PREFIX=$HOME/somepath
+# optional:        -DCMAKE_INSTALL_PREFIX=$HOME/somepath
 cmake ../MPILander
 
 cmake --build .
@@ -52,7 +50,7 @@ ctest
 cmake --build . --target install
 ```
 
-By default, this will build as a static library (`libMPILander.a`) and installs also its headers.
+By default, this will build as a static library (`libmpi.a`) and installs also its headers.
 In order to build a static library, append `-DBUILD_SHARED_LIBS=ON` to the `cmake` command.
 You can only build a static or a shared library at a time.
 
@@ -81,7 +79,7 @@ Use the following lines in your projects `CMakeLists.txt`:
 find_package(MPILander 0.1.0 CONFIG)
 
 if(MPILander_FOUND)
-    target_link_libraries(YourTarget PRIVATE MPILander::MPILander)
+    target_link_libraries(YourTarget PUBLIC MPILander::MPILander)
 endif()
 ```
 
