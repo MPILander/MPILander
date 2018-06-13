@@ -1,7 +1,7 @@
 # MPILander
 
 [![Supported MPI Standard](https://img.shields.io/badge/MPI-3.1-blue.svg)](https://www.mpi-forum.org/docs/)
-[![Linux/OSX Build Status dev](https://img.shields.io/travis/MPILander/MPILander/master.svg?label=master)](https://travis-ci.org/MPILander/MPILander/branches)
+[![Linux/OSX Build Status dev](https://img.shields.io/travis/MPILander/MPILander/master.svg?label=master)](https://travis-ci.com/MPILander/MPILander/branches)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 There can only be one (MPI process)!
