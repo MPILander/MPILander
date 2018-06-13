@@ -1,0 +1,115 @@
+sudo: false
+dist: trusty
+
+cache:
+  apt: true
+
+addons:
+  apt:
+    &apt_common_sources
+    sources:
+      - ubuntu-toolchain-r-test
+
+jobs:
+  fast_finish: true
+  include:
+    ###########################################################################
+    # Stage: Style                                                            #
+    ###########################################################################
+    # TODO: C++ clang-format checks
+
+    ###########################################################################
+    # Stage: C++ Unit Tests                                                   #
+    ###########################################################################
+    # Clang 5.0.0
+    - &test-cpp-unit
+      stage: 'C++ Unit Tests'
+      language: cpp
+      env:
+        - CXXFLAGS="-std=c++14" BUILD_TYPE="Debug"
+      compiler: clang
+      before_install:
+         - CXX=clang++-5.0 && CC=clang-5.0
+      script: &script-cpp-unit
+        - mkdir -p $HOME/build
+        - cd $HOME/build
+        - CXXFLAGS="-Werror" CXX=$CXX CC=$CC
+          cmake
+            -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+            -DCMAKE_INSTALL_PREFIX=$HOME/mpilander-test-install
+            $TRAVIS_BUILD_DIR
+        - make -j 2
+        - CTEST_OUTPUT_ON_FAILURE=1 make test
+        - make install
+        # - make package
+        # - dpkg -i mpilander*.deb
+        - ls -R $HOME/mpilander-test-install | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
+
+    # Clang 8.1.0-apple @ OSX
+    - <<: *test-cpp-unit
+      os: osx
+      language: generic
+      env:
+        - CXXFLAGS="-std=c++11" BUILD_TYPE="Debug"
+      compiler: clang
+      before_install:
+         - CXX=clang++ && CC=clang
+      script: *script-cpp-unit
+
+    # GCC 4.8.5
+    - <<: *test-cpp-unit
+      env:
+        - CXXFLAGS="-std=c++11" BUILD_TYPE="Debug"
+      compiler: gcc
+      before_install: &gcc48_init
+         - CXX=g++-4.8 && CC=gcc-4.8
+      script: *script-cpp-unit
+
+    # GCC 4.9.4
+    - <<: *test-cpp-unit
+      env:
+        - CXXFLAGS="-std=c++11" BUILD_TYPE="Debug"
+      compiler: gcc
+      addons:
+        apt:
+          <<: *apt_common_sources
+          packages: &gcc49_deps
+            - gfortran-4.9
+            - gcc-4.9
+            - g++-4.9
+      before_install: &gcc49_init
+         - CXX=g++-4.9 && CC=gcc-4.9
+      script: *script-cpp-unit
+
+    # GCC 6.4.0
+    - <<: *test-cpp-unit
+      env:
+        - CXXFLAGS="-std=c++11" BUILD_TYPE="Release"
+      compiler: gcc
+      addons:
+        apt:
+          <<: *apt_common_sources
+          packages: &gcc64_deps
+            - gfortran-6
+            - gcc-6
+            - g++-6
+      before_install: &gcc64_init
+         - CXX=g++-6 && CC=gcc-6
+      script: *script-cpp-unit
+
+    # GCC 7.3.0
+    - <<: *test-cpp-unit
+      env:
+        - CXXFLAGS="-std=c++11" BUILD_TYPE="Release"
+      compiler: gcc
+      addons:
+        apt:
+          <<: *apt_common_sources
+          packages: &gcc73_deps
+            - gfortran-7
+            - gcc-7
+            - g++-7
+      before_install: &gcc73_init
+         - CXX=g++-7 && CC=gcc-7
+      script: *script-cpp-unit
+
