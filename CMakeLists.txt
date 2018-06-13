@@ -61,9 +61,11 @@ set(SOURCES
 
 # library
 add_library(MPILander ${SOURCES} ${HEADERS})
-# add_library(MPILander::MPILander ALIAS MPILander)
+add_library(MPILander::MPILander ALIAS MPILander)
 
 # properties
+set_target_properties(MPILander PROPERTIES OUTPUT_NAME "mpi")
+
 target_compile_features(MPILander
     PUBLIC cxx_std_11
 )
