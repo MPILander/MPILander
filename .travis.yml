@@ -28,8 +28,6 @@ jobs:
       env:
         - CXXFLAGS="-std=c++14" BUILD_TYPE="Debug"
       compiler: clang
-      before_install:
-         - CXX=clang++-5.0 && CC=clang-5.0
       script: &script-cpp-unit
         - mkdir -p $HOME/build
         - cd $HOME/build
@@ -44,6 +42,21 @@ jobs:
         # - make package
         # - dpkg -i mpilander*.deb
         - ls -R $HOME/mpilander-test-install | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
+
+    # Clang 3.9
+    - <<: *test-cpp-unit
+      env:
+        - CXXFLAGS="-std=c++11" BUILD_TYPE="Debug"
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-3.9
+          packages: &clang39_deps
+            - clang-3.9
+      before_install: &clang39_init
+         - CXX=clang++-3.9 && CC=clang-3.9
+      script: *script-cpp-unit
 
     # Clang 8.1.0-apple @ OSX
     - <<: *test-cpp-unit
