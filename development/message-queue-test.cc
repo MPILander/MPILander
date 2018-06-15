@@ -8,7 +8,10 @@ typedef int MPI_Datatype;
 
 namespace MPILander {
 
-    namespace Message {
+    const int any_tag = -4096;
+    const int any_src = -8192;
+
+    namespace MessageQueue {
 
         // MPI message envelope are the arguments used for matching:
         // { int rank, int tag, MPI_Comm communicator }
@@ -30,16 +33,43 @@ namespace MPILander {
 
             public:
 
-                Queue();
-                ~Queue();
+                Queue() {};
+                ~Queue() {};
 
                 void Insert(const Message& m) { q.push_back(m); }
-                void Match(const Message& m) {
-                    auto [mrank,mtag] = std::get<0>(m);
-                    for (const auto& i : q) {
-                        auto [irank,itag] = std::get<0>(i);
-                        if (irank==mrank && itag==mtag) {
-                            std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
+                void Match(int && src, int && tag) {
+
+                    // fast exit if the message queue is empty
+                    if (q.empty()) return;
+
+                    // wildcards first...
+                    if (src == any_src && tag == any_tag) {
+                        auto m = q.front();
+                        auto [mrank,mtag] = std::get<0>(m);
+                        std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
+                    }
+                    else if (src == any_src) {
+                        for (const auto& m : q) {
+                            auto [mrank,mtag] = std::get<0>(m);
+                            if (mtag==tag) {
+                                std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
+                            }
+                        }
+                    }
+                    else if (tag == any_tag) {
+                        for (const auto& m : q) {
+                            auto [mrank,mtag] = std::get<0>(m);
+                            if (mrank==src) {
+                                std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
+                            }
+                        }
+                    }
+                    else {
+                        for (const auto& m : q) {
+                            auto [mrank,mtag] = std::get<0>(m);
+                            if (mrank==src && mtag==tag) {
+                                std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
+                            }
                         }
                     }
                 }
@@ -68,10 +98,11 @@ int main(int argc, char* argv[])
 
     int n = (argc>1) ? std::atoi(argv[1]) : 100;
 
+    MPILander::MessageQueue::Queue q;
+    MPILander::MessageQueue::Message m{{0,0},{NULL,0,0}};
 
-
-
-
+    q.Insert(m);
+    q.Match(0,0);
 
     std::cout << "The End" << std::endl;
 

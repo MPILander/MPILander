@@ -5,7 +5,7 @@ CXXFLAGS	+= -g -Wall -Wextra -Wno-unused
 all: message-queue-test
 
 %: %.cc
-	${CXX} ${CXXFLAGS} -c $< -o $@
+	${CXX} ${CXXFLAGS} $< -o $@
 
 clean:
 	rm -f message-queue-test
