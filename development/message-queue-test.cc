@@ -33,45 +33,65 @@ namespace MPILander {
 
             public:
 
-                Queue() {};
-                ~Queue() {};
+                Queue() {}
+                ~Queue() {
+                    if (!q.empty()) {
+                        std::cerr << "Queue not empty when dtor called!" << std::endl;
+                    }
+                }
 
                 void Insert(const Message& m) { q.push_back(m); }
-                void Match(int && src, int && tag) {
+                bool Match(int && src, int && tag, Message & msg) {
 
                     // fast exit if the message queue is empty
-                    if (q.empty()) return;
+                    if (q.empty()) {
+                        return false;
+                    }
 
                     // wildcards first...
                     if (src == any_src && tag == any_tag) {
                         auto m = q.front();
                         auto [mrank,mtag] = std::get<0>(m);
                         std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
+                        msg = m;
+                        q.erase(m);
+                        return true;
                     }
                     else if (src == any_src) {
-                        for (const auto& m : q) {
+                        for (auto && m : q) {
                             auto [mrank,mtag] = std::get<0>(m);
                             if (mtag==tag) {
                                 std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
                             }
+                            msg = m;
+                            //q.erase(m);
+                            return true;
                         }
                     }
                     else if (tag == any_tag) {
-                        for (const auto& m : q) {
+                        for (auto && m : q) {
                             auto [mrank,mtag] = std::get<0>(m);
                             if (mrank==src) {
                                 std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
                             }
+                            msg = m;
+                            //q.erase(m);
+                            return true;
                         }
                     }
                     else {
-                        for (const auto& m : q) {
+                        for (auto && m : q) {
                             auto [mrank,mtag] = std::get<0>(m);
                             if (mrank==src && mtag==tag) {
                                 std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
                             }
+                            msg = m;
+                            //q.erase(m);
+                            return true;
                         }
                     }
+
+                    return false;
                 }
 
                 void Insert(const Envelope& e, const Contents& c) { q.push_back(std::make_pair(e,c)); }
@@ -99,10 +119,11 @@ int main(int argc, char* argv[])
     int n = (argc>1) ? std::atoi(argv[1]) : 100;
 
     MPILander::MessageQueue::Queue q;
-    MPILander::MessageQueue::Message m{{0,0},{NULL,0,0}};
+    MPILander::MessageQueue::Message mi{{0,0},{NULL,0,0}};
+    MPILander::MessageQueue::Message mo;
 
-    q.Insert(m);
-    q.Match(0,0);
+    q.Insert(mi);
+    q.Match(0,0,mo);
 
     std::cout << "The End" << std::endl;
 
