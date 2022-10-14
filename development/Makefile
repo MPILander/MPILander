@@ -1,5 +1,6 @@
-CXX		 = g++-8
-CXXFLAGS	 = -std=c++17
+#CXX		 = g++-12
+CXX		 = clang++
+CXXFLAGS	 = -std=c++20
 CXXFLAGS	+= -g -Wall -Wextra -Wno-unused
 
 all: message-queue-test
