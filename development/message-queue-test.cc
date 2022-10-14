@@ -37,6 +37,10 @@ namespace MPILander {
                 ~Queue() {
                     if (!q.empty()) {
                         std::cerr << "Queue not empty when dtor called!" << std::endl;
+                        for (auto m = q.cbegin() ; m != q.cend() ; m++) {
+                            auto [mrank,mtag] = std::get<0>(*m);
+                            std::cerr << "Not empty: rank=" << mrank << ", tag=" << mtag << "\n";
+                        }
                     }
                 }
 
@@ -119,11 +123,11 @@ int main(int argc, char* argv[])
     int n = (argc>1) ? std::atoi(argv[1]) : 100;
 
     MPILander::MessageQueue::Queue q;
-    MPILander::MessageQueue::Message mi{{0,0},{NULL,0,0}};
-    MPILander::MessageQueue::Message mo;
+    MPILander::MessageQueue::Message min{{0,0},{NULL,0,0}};
+    MPILander::MessageQueue::Message mout;
 
-    q.Insert(mi);
-    q.Match(0,0,mo);
+    q.Insert(min);
+    q.Match(0,0,mout);
 
     std::cout << "The End" << std::endl;
 
