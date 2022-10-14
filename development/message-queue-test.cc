@@ -50,42 +50,42 @@ namespace MPILander {
 
                     // wildcards first...
                     if (src == any_src && tag == any_tag) {
-                        auto m = q.front();
-                        auto [mrank,mtag] = std::get<0>(m);
+                        auto m = q.cbegin();
+                        auto [mrank,mtag] = std::get<0>(*m);
                         std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
-                        msg = m;
-                        //q.erase(m);
+                        msg = *m;
+                        q.erase(m);
                         return true;
                     }
                     else if (src == any_src) {
-                        for (auto && m : q) {
-                            auto [mrank,mtag] = std::get<0>(m);
+                        for (auto m = q.cbegin() ; m != q.cend() ; m++) {
+                            auto [mrank,mtag] = std::get<0>(*m);
                             if (mtag==tag) {
                                 std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
                             }
-                            msg = m;
-                            //q.erase(m);
+                            msg = *m;
+                            q.erase(m);
                             return true;
                         }
                     }
                     else if (tag == any_tag) {
-                        for (auto && m : q) {
-                            auto [mrank,mtag] = std::get<0>(m);
+                        for (auto m = q.cbegin() ; m != q.cend() ; m++) {
+                            auto [mrank,mtag] = std::get<0>(*m);
                             if (mrank==src) {
                                 std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
                             }
-                            msg = m;
-                            //q.erase(m);
+                            msg = *m;
+                            q.erase(m);
                             return true;
                         }
                     }
                     else {
-                        for (auto && m : q) {
-                            auto [mrank,mtag] = std::get<0>(m);
+                        for (auto m = q.cbegin() ; m != q.cend() ; m++) {
+                            auto [mrank,mtag] = std::get<0>(*m);
                             if (mrank==src && mtag==tag) {
                                 std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
                             }
-                            msg = m;
+                            msg = *m;
                             //q.erase(m);
                             return true;
                         }
