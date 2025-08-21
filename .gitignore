@@ -30,3 +30,35 @@
 *.exe
 *.out
 *.app
+*.x
+message-queue-test
+
+# Build directories
+build/
+bin/
+lib/
+obj/
+
+# IDE and editor files
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+
+# macOS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+
+# macOS debug symbols
+*.dSYM/
+*.dSYM
+
+# Thumbnails
+ehthumbs.db
+Thumbs.db
