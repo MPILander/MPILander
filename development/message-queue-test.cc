@@ -4,12 +4,12 @@
 #include <tuple>   // std::tuple
 #include <list>    // std::list
 
-typedef int MPI_Datatype;
+#include "mpi.h"
 
 namespace MPILander {
 
-    const int any_tag = -4096;
-    const int any_src = -8192;
+    const int any_tag = MPI_ANY_TAG;
+    const int any_src = MPI_ANY_SOURCE;
 
     namespace MessageQueue {
 
@@ -17,12 +17,14 @@ namespace MPILander {
         // { int rank, int tag, MPI_Comm communicator }
         // but we can elide the communicator by associating
         // a message queue with every communicator.
-        using Envelope = std::tuple<int,int>;
+        // Since this project only supports one process, we will omit the rank too.
+        using Envelope = std::pair<int,int>; // rank, tag
 
         // MPI message payload is the rest of the arguments
         // to MPI send:
-        // { void* buffer, int count, MPI_Datatype type }
-        using Contents = std::tuple<void*,int,MPI_Datatype>;
+        // { void* buffer, size_t count, MPI_Datatype type }
+        // We will use size_t to handle large-count support.
+        using Contents = std::tuple<void*,size_t,MPI_Datatype>;
 
         using Message = std::pair<Envelope,Contents>;
 
@@ -30,6 +32,16 @@ namespace MPILander {
 
             private:
                 std::list<Message> q;
+
+                void print_message(const Message& msg, const std::string& context = "") const {
+                    auto [envelope, contents] = msg;
+                    auto [rank, tag] = envelope;
+                    auto [buffer, count, datatype] = contents;
+                    if (!context.empty()) {
+                        std::cout << context << ": ";
+                    }
+                    std::cout << "envelope(" << rank << "," << tag << "), contents(" << buffer << "," << count << "," << datatype << ")\n";
+                }
 
             public:
 
@@ -44,8 +56,20 @@ namespace MPILander {
                     }
                 }
 
-                void Insert(const Message& m) { q.push_back(m); }
-                bool Match(int && src, int && tag, Message & msg) {
+                void Insert(const Message& m) { 
+                    // insert at the back of the queue
+                    q.push_back(m); 
+                }
+
+                void Insert(const Envelope& e, const Contents& c) { 
+                    q.push_back(std::make_pair(e,c)); 
+                }
+
+                void PrintMessage(const Message& msg, const std::string& context = "") const {
+                    print_message(msg, context);
+                }
+
+                bool Match(int src, int tag, Message & msg) {
 
                     // fast exit if the message queue is empty
                     if (q.empty()) {
@@ -56,8 +80,9 @@ namespace MPILander {
                     if (src == any_src && tag == any_tag) {
                         auto m = q.cbegin();
                         auto [mrank,mtag] = std::get<0>(*m);
-                        std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
+                        std::cout << "Wildcard match: rank=" << mrank << ", tag=" << mtag << "\n";
                         msg = *m;
+                        //print_message(msg, "msg contains");
                         q.erase(m);
                         return true;
                     }
@@ -66,10 +91,11 @@ namespace MPILander {
                             auto [mrank,mtag] = std::get<0>(*m);
                             if (mtag==tag) {
                                 std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
+                                msg = *m;
+                                //print_message(msg, "msg contains");
+                                q.erase(m);
+                                return true;
                             }
-                            msg = *m;
-                            q.erase(m);
-                            return true;
                         }
                     }
                     else if (tag == any_tag) {
@@ -77,10 +103,11 @@ namespace MPILander {
                             auto [mrank,mtag] = std::get<0>(*m);
                             if (mrank==src) {
                                 std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
+                                msg = *m;
+                                //print_message(msg, "msg contains");
+                                q.erase(m);
+                                return true;
                             }
-                            msg = *m;
-                            q.erase(m);
-                            return true;
                         }
                     }
                     else {
@@ -88,20 +115,16 @@ namespace MPILander {
                             auto [mrank,mtag] = std::get<0>(*m);
                             if (mrank==src && mtag==tag) {
                                 std::cout << "Match: rank=" << mrank << ", tag=" << mtag << "\n";
+                                msg = *m;
+                                //print_message(msg, "msg contains");
+                                q.erase(m);
+                                return true;
                             }
-                            msg = *m;
-                            //q.erase(m);
-                            return true;
                         }
                     }
 
                     return false;
                 }
-
-                void Insert(const Envelope& e, const Contents& c) { q.push_back(std::make_pair(e,c)); }
-                //const Contents& Match(const Envelope& e) {
-                //    for (
-                //}
 
                 Queue(const Queue&) = delete;   // disable copy ctor
                 Queue(Queue&&) = delete;        // disable move ctor
@@ -123,13 +146,35 @@ int main(int argc, char* argv[])
     int n = (argc>1) ? std::atoi(argv[1]) : 100;
 
     MPILander::MessageQueue::Queue q;
-    MPILander::MessageQueue::Message min{{0,0},{NULL,0,0}};
-    MPILander::MessageQueue::Message mout;
 
-    q.Insert(min);
-    q.Match(0,0,mout);
+    char* buffer = new char[100];
+
+    // {{rank,tag}, {buffer,count,datatype}}
+    q.Insert({{0,0},{NULL,0,0}});
+    q.Insert({{0,1},{NULL,0,0}});
+    q.Insert({{0,2},{NULL,0,0}});
+    q.Insert({{0,3},{NULL,0,0}});
+    q.Insert({{0,4},{NULL,0,0}});
+    q.Insert({{0,5},{NULL,0,0}});
+    q.Insert({{0,6},{NULL,0,0}});
+    q.Insert({{0,7},{NULL,0,0}});
+    q.Insert({{0,0},{&buffer[0],1,0}});
+    q.Insert({{0,0},{&buffer[1],2,0}});
+    q.Insert({{0,0},{&buffer[3],3,0}});
+    q.Insert({{0,0},{&buffer[6],4,0}});
+    q.Insert({{0,0},{&buffer[10],5,0}});
+    q.Insert({{0,0},{&buffer[15],6,0}});
+    q.Insert({{0,0},{&buffer[21],7,0}});
+
+    MPILander::MessageQueue::Message msgout;
+    
+    while ( q.Match(MPILander::any_src, MPILander::any_tag, msgout) == true) {
+        q.PrintMessage(msgout, "msgout");
+    }
 
     std::cout << "The End" << std::endl;
+    
+    delete[] buffer;
 
     return 0;
 }

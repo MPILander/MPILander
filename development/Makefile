@@ -2,6 +2,7 @@
 CXX		 = clang++
 CXXFLAGS	 = -std=c++20
 CXXFLAGS	+= -g -Wall -Wextra -Wno-unused
+CXXFLAGS	+= -I../include
 
 all: message-queue-test
 
