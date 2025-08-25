@@ -34,6 +34,7 @@
 message-queue-test
 thread_test
 send_recv_test
+comm_dup_test
 
 # Build directories
 build/
